@@ -56,21 +56,42 @@
     let problemPage=Vue.extend({
         template:`
 <div>
-<div class="ui main container"><div class="ui center aligned grid"><div class="row"><h1 class="ui header">这里是标题</h1></div><div class="row" style="margin-top: -15px"><span class="ui label">内存限制：XX MiB</span> <span class="ui label">时间限制：XX Sec</span></div></div><div class="ui grid"><div class="row"><div class="column">
-<div class="ui buttons"><route-link to="/" class="small ui primary button">返回</route-link></div></div></div>
+<div class="ui main container"><div class="ui center aligned grid"><div class="row">
+<h1 class="ui header">{{data.title}}</h1></div><div class="row" style="margin-top: -15px"><span class="ui label">内存限制：{{data.memory}} MiB</span> <span class="ui label">时间限制：{{data.time}} Sec</span></div></div><div class="ui grid"><div class="row"><div class="column">
+</div></div>
 <div class="row"><div class="column"><h4 class="ui top attached block header">题目描述</h4><div class="ui bottom attached segment font-content"><div style="position: relative; overflow: hidden;">
-<p>这里是题目描述</p>
+{{data.description}}
 </div></div></div></div><div class="row"><div class="column"><h4 class="ui top attached block header">输入格式</h4><div class="ui bottom attached segment font-content"><div style="position: relative; overflow: hidden;"><div class=content>
-<p>这里是输入格式</p>
+{{data.input}}
 </div></div></div></div></div><div class="row"><div class="column"><h4 class="ui top attached block header">输出格式</h4><div class="ui bottom attached segment font-content"><div style="position: relative; overflow: hidden;"><div class=content>
-<p>这里是输出格式</p>
+{{data.output}}
 </div></div></div></div></div><div class="row"><div class="column"><h4 class="ui top attached block header">样例</h4><div class="ui bottom attached segment font-content"><div style="position: relative; overflow: hidden;"><div class=content>
-<p>这里是样例</p>
+{{data.sample}}
 </div></div></div></div></div><div class="row"><div class="column"><h4 class="ui top attached block header">数据范围与提示</h4><div class="ui bottom attached segment font-content"><div style="position: relative; overflow: hidden;">
-<p>这里是数据范围与提示</p>
+{{data.tips}}
 </div></div></div></div>
     </div></div></div>
-`
+`,
+        data: () => {
+            return {data:{time:0,memory:0,title:"",description:"",input:"",output:"",sample:"",tips:""}};
+        },
+        beforeRouteEnter (to, from, next) {
+            next(vm=> {
+                fetch('data/problem/'+to.params["pid"]+'.json')
+                    .then(response => response.json())
+                    .then(json => {
+                        vm.data = json.data;
+                    });
+            });
+        },
+        beforeRouteUpdate (to, from, next) {
+            fetch('data/problem/'+to.params["pid"]+'.json')
+                .then(response => response.json())
+                .then(json => {
+                    this.data = json.data;
+                });
+            next()
+        },
     });
     let router = new VueRouter({
         routes: [
@@ -81,19 +102,5 @@
     const app=new Vue({
         router
     }).$mount('#app');
-    /*const app = new Vue({
-    el: '#app',
-    data: {
-    problems: [
-    ]
-    },
-    created() {
-    fetch('data/problemlist.json')
-    .then(response => response.json())
-    .then(json => {
-    this.problems = json.problems;
-    })
-    }
-    });*/
 </script>
 </html>
