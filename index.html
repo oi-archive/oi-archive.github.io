@@ -19,6 +19,7 @@
 </div>
 </body>
 <script src="lib/axios.min.js"></script>
+<script src="lib/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
 <script>
@@ -37,7 +38,7 @@
             console.log(t);
             if (t.length>=4 && t[0]==='{' && t[1]==='{' && t[t.length-2]==='}' && t[t.length-1]==='}') {
                 if (title!==null) {
-                    data.block[data.block.length]={title:title,html:doc};
+                    data.block[data.block.length]={title:title,html:marked(doc)};
                     console.log(title);
                 }
                 title=t.substring(2,t.length-2);
@@ -90,7 +91,7 @@
 					<div class="row" v-for="i in data.block">
 					    <div class="column"><h4 class="ui top attached block header">{{i.title}}</h4>
 					        <div class="ui bottom attached segment font-content"><div style="position: relative; overflow: hidden;">
-									{{i.html}}
+					                <span v-html="i.html"></span>
 						    </div></div>
 						</div>
 					</div>
