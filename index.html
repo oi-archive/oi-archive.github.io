@@ -2,9 +2,9 @@
 <html>
 <head>
     <meta charset="utf-8"/>
-    <link rel="stylesheet" type="text/css" href="./Semantic/semantic.min.css">
-    <script src="./Semantic/jquery.min.js"></script>
-    <script src="./Semantic/semantic.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="lib/semantic.min.css">
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/semantic.min.js"></script>
     <title>OI Archive</title>
 </head>
 
@@ -18,10 +18,36 @@
     <router-view></router-view>
 </div>
 </body>
+<script src="lib/axios.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
 <script>
     "use strict";
+    async function getProblem(pid) {
+        let response=await axios.get('source/problem/'+pid+'/main.json');
+        let json=response.data;
+        let data=Object.assign({},json);
+        data.block=[];
+        let desc=(await axios.get('source/problem/'+pid+'/'+json.description)).data;
+        data.description=null;
+        desc+="{{}}\n";
+        let title=null,doc="";
+        for (let i of desc.split('\n')) {
+            let t=i.trim();
+            console.log(t);
+            if (t.length>=4 && t[0]==='{' && t[1]==='{' && t[t.length-2]==='}' && t[t.length-1]==='}') {
+                if (title!==null) {
+                    data.block[data.block.length]={title:title,html:doc};
+                    console.log(title);
+                }
+                title=t.substring(2,t.length-2);
+                doc="";
+            } else {
+                doc+=i+'\n';
+            }
+        }
+        return await data;
+    }
     var problemListPage = Vue.extend({
         template: `
         <div class="ui main container">
@@ -34,7 +60,7 @@
                         <tr><th>PID</th><th>标题</th></tr>
                         </thead>
                         <tbody v-for="i in problems">
-                            <tr><td><router-link v-bind:to="'/problem/'+i.pid">{{i.pid}}</router-link></td><td>{{i.name}}</td></tr>
+                            <tr><td><router-link v-bind:to="'/problem/'+i.pid">{{i.pid}}</router-link></td><td>{{i.title}}</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -46,7 +72,7 @@
             return {problems:[]};
         },
         created() {
-            fetch('data/problemlist.json')
+            fetch('source/problemlist.json')
                 .then(response => response.json())
                 .then(json => {
                     this.problems = json.problems;
@@ -56,41 +82,36 @@
     let problemPage=Vue.extend({
         template:`
 <div>
-<div class="ui main container"><div class="ui center aligned grid"><div class="row">
-<h1 class="ui header">{{data.title}}</h1></div><div class="row" style="margin-top: -15px"><span class="ui label">内存限制：{{data.memory}} MiB</span> <span class="ui label">时间限制：{{data.time}} Sec</span></div></div><div class="ui grid"><div class="row"><div class="column">
-</div></div>
-<div class="row"><div class="column"><h4 class="ui top attached block header">题目描述</h4><div class="ui bottom attached segment font-content"><div style="position: relative; overflow: hidden;">
-{{data.description}}
-</div></div></div></div><div class="row"><div class="column"><h4 class="ui top attached block header">输入格式</h4><div class="ui bottom attached segment font-content"><div style="position: relative; overflow: hidden;"><div class=content>
-{{data.input}}
-</div></div></div></div></div><div class="row"><div class="column"><h4 class="ui top attached block header">输出格式</h4><div class="ui bottom attached segment font-content"><div style="position: relative; overflow: hidden;"><div class=content>
-{{data.output}}
-</div></div></div></div></div><div class="row"><div class="column"><h4 class="ui top attached block header">样例</h4><div class="ui bottom attached segment font-content"><div style="position: relative; overflow: hidden;"><div class=content>
-{{data.sample}}
-</div></div></div></div></div><div class="row"><div class="column"><h4 class="ui top attached block header">数据范围与提示</h4><div class="ui bottom attached segment font-content"><div style="position: relative; overflow: hidden;">
-{{data.tips}}
-</div></div></div></div>
-    </div></div></div>
+	<div class="ui main container"><div class="ui center aligned grid"><div class="row">
+				<h1 class="ui header">{{data.title}}</h1></div><div class="row" style="margin-top: -15px">
+				    <span class="ui label">内存限制：{{data.memory}} MB</span>
+				    <span class="ui label">时间限制：{{data.time}} ms</span></div></div><div class="ui grid"><div class="row"><div class="column">
+				</div></div>
+					<div class="row" v-for="i in data.block">
+					    <div class="column"><h4 class="ui top attached block header">{{i.title}}</h4>
+					        <div class="ui bottom attached segment font-content"><div style="position: relative; overflow: hidden;">
+									{{i.html}}
+						    </div></div>
+						</div>
+					</div>
+		</div></div>
+</div>
 `,
         data: () => {
-            return {data:{time:0,memory:0,title:"",description:"",input:"",output:"",sample:"",tips:""}};
+            return {data:{time:0,memory:0,title:"数据加载中",block:[{title:"",html:""}]}};
         },
         beforeRouteEnter (to, from, next) {
             next(vm=> {
-                fetch('data/problem/'+to.params["pid"]+'.json')
-                    .then(response => response.json())
-                    .then(json => {
-                        vm.data = json.data;
-                    });
+                getProblem(to.params["pid"]).then(data => {
+                    vm.data=data;
+                });
             });
         },
         beforeRouteUpdate (to, from, next) {
-            fetch('data/problem/'+to.params["pid"]+'.json')
-                .then(response => response.json())
-                .then(json => {
-                    this.data = json.data;
-                });
-            next()
+            getProblem(to.params["pid"]).then(data => {
+                this.data=data;
+            });
+            next();
         },
     });
     let router = new VueRouter({
