@@ -50,7 +50,6 @@
         let title=null,doc="";
         for (let i of desc.split('\n')) {
             let t=i.trim();
-            console.log(t);
             if (t.length>=3 && t[0]==='#' && t[1]===' ') {
                 if (title!==null) {
                     data.block[data.block.length]={title:title,html:marked(doc)};
@@ -68,6 +67,7 @@
         <div class="ui main container">
         <div class="padding">
             <div class="eleven wide column">
+
                 <h4 class="ui top attached block header">题目列表</h4>
                 <div class="ui bottom attached segment">
                     <table class="ui celled table">
@@ -101,6 +101,7 @@
 				<h1 class="ui header">{{data.title}}</h1></div><div class="row" style="margin-top: -15px">
 				    <span class="ui label">内存限制：{{data.memory}} MB</span>
 				    <span class="ui label">时间限制：{{data.time}} ms</span></div></div><div class="ui grid"><div class="row"><div class="column">
+				<div class="ui buttons"><a href="javascript:void(0);" v-on:click="onBackClicked()" class="small ui primary button">返回</a></div>
 				</div></div>
 					<div class="row" v-for="i in data.block">
 					    <div class="column"><h4 class="ui top attached block header">{{i.title}}</h4>
@@ -114,6 +115,11 @@
 `,
         data: () => {
             return {data:{time:0,memory:0,title:"数据加载中",block:[{title:"",html:""}]}};
+        },
+        methods: {
+            onBackClicked:() => {
+                this.app.$router.go(-1)
+            }
         },
         beforeRouteEnter (to, from, next) {
             next(vm=> {
@@ -135,7 +141,7 @@
             { path: '/problem/:pid', component: problemPage}
         ]
     });
-    const app=new Vue({
+    window.app=new Vue({
         router
     }).$mount('#app');
 </script>
