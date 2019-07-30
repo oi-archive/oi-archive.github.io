@@ -46,17 +46,16 @@
         data.block=[];
         let desc=(await axios.get('source/problem/'+pid+'/'+json.description)).data;
         data.description=null;
-        desc+="{{}}\n";
+        desc+="# !\n";
         let title=null,doc="";
         for (let i of desc.split('\n')) {
             let t=i.trim();
             console.log(t);
-            if (t.length>=4 && t[0]==='{' && t[1]==='{' && t[t.length-2]==='}' && t[t.length-1]==='}') {
+            if (t.length>=3 && t[0]==='#' && t[1]===' ') {
                 if (title!==null) {
                     data.block[data.block.length]={title:title,html:marked(doc)};
-                    console.log(title);
                 }
-                title=t.substring(2,t.length-2);
+                title=t.substring(2,t.length);
                 doc="";
             } else {
                 doc+=i+'\n';
