@@ -1,5 +1,4 @@
-{
-  "problems": [
+[
     {
       "title": "A + B problem",
       "pid": "1"
@@ -13,4 +12,3 @@
       "pid": "3"
     }
   ]
-}

@@ -10,7 +10,7 @@
 
 <body>
 <div class="ui three item menu">
-    <a class="header item" href="./index.html">
+    <a class="header item" href="javascript:void(0)">
         <span style="font-family: Lato,'Helvetica Neue',Arial,Helvetica,sans-serif; font-size: 1.3em; font-weight: 300; ">OI Archive</span>
     </a>
 </div>
@@ -39,12 +39,12 @@
 <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
 <script>
     "use strict";
-    async function getProblem(pid) {
-        let response=await axios.get('source/problem/'+pid+'/main.json');
+    async function getProblem(oj,pid) {
+        let response=await axios.get(`source/${oj}/${pid}/main.json`);
         let json=response.data;
         let data=Object.assign({},json);
         data.block=[];
-        let desc=(await axios.get('source/problem/'+pid+'/'+json.description)).data;
+        let desc=(await axios.get(`source/${oj}/${pid}/${json.description}`)).data;
         data.description=null;
         desc+="# !\n";
         let title=null,doc="";
@@ -67,15 +67,17 @@
         <div class="ui main container">
         <div class="padding">
             <div class="eleven wide column">
-
+                <div calss="ui divider">
+				<div class="ui buttons" v-for="i in problemSet"><a href="javascript:void(0);" @click='onOJClicked(i.id)' class="small ui primary button">{{i.name}}</a></div>
+                </div>
                 <h4 class="ui top attached block header">题目列表</h4>
                 <div class="ui bottom attached segment">
                     <table class="ui celled table">
                         <thead>
                         <tr><th>PID</th><th>标题</th></tr>
                         </thead>
-                        <tbody v-for="i in problems">
-                            <tr><td><router-link v-bind:to="'/problem/'+i.pid">{{i.pid}}</router-link></td><td>{{i.title}}</td></tr>
+                        <tbody v-for="i in problemList">
+                            <tr><td><router-link v-bind:to="'/problem/'+nowOJ+'/'+i.pid">{{i.pid}}</router-link></td><td>{{i.title}}</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -84,14 +86,33 @@
         </div>
         `,
         data: () => {
-            return {problems:[]};
+            return {problemList:[],problemSet:[],nowOJ:"main"};
+        },
+        methods: {
+            onOJClicked(id) {
+                this.nowOJ=id;
+                for (const i of this.problemSet) {
+                    if (i.id===id) {
+                        this.problemList=i.problemList;
+                        return;
+                    }
+                }
+                alert("异常：找不到指定的题库");
+            }
         },
         created() {
-            fetch('source/problemlist.json')
-                .then(response => response.json())
-                .then(json => {
-                    this.problems = json.problems;
-                });
+            axios('source/problemset.json').then(response => {
+                this.problemSet=response.data;
+                for(const i of this.problemSet) {
+                    axios('source/'+i.id+'/problemlist.json').then(response => {
+                        i.problemList=response.data;
+                        if (i.id==="main") {
+                            this.problemList=i.problemList;
+                        }
+                    });
+                }
+            });
+            this.nowOJ="main";
         }
     });
     let problemPage=Vue.extend({
@@ -117,19 +138,19 @@
             return {data:{time:0,memory:0,title:"数据加载中",block:[{title:"",html:""}]}};
         },
         methods: {
-            onBackClicked:() => {
-                this.app.$router.go(-1)
+            onBackClicked(){
+                window.app.$router.go(-1)
             }
         },
         beforeRouteEnter (to, from, next) {
             next(vm=> {
-                getProblem(to.params["pid"]).then(data => {
+                getProblem(to.params["oj"],to.params["pid"]).then(data => {
                     vm.data=data;
                 });
             });
         },
         beforeRouteUpdate (to, from, next) {
-            getProblem(to.params["pid"]).then(data => {
+            getProblem(to.params["oj"],to.params["pid"]).then(data => {
                 this.data=data;
             });
             next();
@@ -138,7 +159,7 @@
     let router = new VueRouter({
         routes: [
             { path: '/', component: problemListPage},
-            { path: '/problem/:pid', component: problemPage}
+            { path: '/problem/:oj/:pid', component: problemPage}
         ]
     });
     window.app=new Vue({
