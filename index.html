@@ -44,7 +44,7 @@
         let json=response.data;
         let data=Object.assign({},json);
         data.block=[];
-        let desc=(await axios.get(`source/${oj}/${pid}/${json.description}`)).data;
+        let desc=(await axios.get(`source/${oj}/${pid}/description.md`)).data;
         data.description=null;
         desc+="# !\n";
         let title=null,doc="";
