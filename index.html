@@ -18,20 +18,15 @@
     <router-view></router-view>
 </div>
 </body>
-<script type="text/javascript"
-  src="lib/mathjax/unpacked/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-</script>
 <script type="text/x-mathjax-config">
   MathJax.Hub.Config({
-    extensions: ["tex2jax.js"],
-    jax: ["input/TeX", "output/HTML-CSS"],
     tex2jax: {
-      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
-      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
-      processEscapes: true
-    },
-    "HTML-CSS": { availableFonts: ["TeX"] }
+      inlineMath: [['$','$'],['\\(','\\)']],
+    }
   });
+</script>
+<script type="text/javascript"
+  src="lib/mathjax/unpacked/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
 </script>
 <script src="lib/axios.min.js"></script>
 <script src="lib/marked.min.js"></script>
@@ -117,7 +112,7 @@
     });
     let problemPage=Vue.extend({
         template:`
-<div>
+<div :key="data">
 	<div class="ui main container"><div class="ui center aligned grid"><div class="row">
 				<h1 class="ui header">{{data.title}}</h1></div><div class="row" style="margin-top: -15px">
 				    <span class="ui label">内存限制：{{data.memory}} MB</span>
@@ -155,6 +150,17 @@
             });
             next();
         },
+        watch: {
+            data: function() {
+                console.log('data changed');
+                this.$nextTick().then(()=>{
+                    if(window.MathJax) {
+                        console.log('rendering mathjax');
+                        window.MathJax.Hub.Queue(["Typeset", window.MathJax.Hub], () => console.log('done'));
+                    }
+                });
+            }
+        }
     });
     let router = new VueRouter({
         routes: [
